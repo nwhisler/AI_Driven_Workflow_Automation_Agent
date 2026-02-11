@@ -1,0 +1,4 @@
+aiosmtpd
+ollama
+pydantic
+pypdf
