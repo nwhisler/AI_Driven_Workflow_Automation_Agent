@@ -1,8 +1,8 @@
-# AI_Agent
+# AI-Driven Workflow Automation Agent
 
 ## Overview
 
-**AI_Agent** is a local, LLM-powered automation system that performs end-to-end candidate screening and interview scheduling. It parses resumes, evaluates candidates against configurable criteria, generates interview availability, communicates via email, and schedules interviews on a calendar using structured LLM outputs.
+**AI-Driven Workflow Automation Agent** is a local, LLM-powered automation system that performs end-to-end candidate screening and interview scheduling. It parses resumes, evaluates candidates against configurable criteria, generates interview availability, communicates via email, and schedules interviews on a calendar using structured LLM outputs.
 
 The system is designed to run **entirely locally** using **Ollama** for inference and relies on explicit schemas (via Pydantic) to ensure deterministic, machine-parseable LLM responses.
 
