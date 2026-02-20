@@ -2,3 +2,4 @@ aiosmtpd
 ollama
 pydantic
 pypdf
+python_dateutil
