@@ -1,161 +1,217 @@
 # AI-Driven Workflow Automation Agent
 
-## Overview
+A fully local, end-to-end recruiting workflow automation system that combines deterministic software engineering with LLM-assisted reasoning to simulate a real recruiting pipeline.
 
-**AI-Driven Workflow Automation Agent** is a local, LLM-powered automation system that performs end-to-end candidate screening and interview scheduling. It parses resumes, evaluates candidates against configurable criteria, generates interview availability, communicates via email, and schedules interviews on a calendar using structured LLM outputs.
+The agent parses resumes, filters candidates, generates interview schedules, sends email invitations, processes replies, and maintains a persistent calendar — all without external services.
 
-The system is designed to run **entirely locally** using **Ollama** for inference and relies on explicit schemas (via Pydantic) to ensure deterministic, machine-parseable LLM responses.
-
----
-
-## What AI_Agent Does
-
-AI_Agent automates the following workflow:
-
-1. **Resume ingestion** (PDF)
-2. **LLM-based resume parsing** into structured candidate data
-3. **Rule-based candidate filtering**
-4. **Calendar availability analysis**
-5. **LLM-generated interview date/time proposals**
-6. **Email communication with candidates**
-7. **Interview scheduling and confirmation**
-
-All LLM interactions return strict JSON conforming to predefined schemas.
+Designed as a deterministic AI orchestration prototype demonstrating structured LLM integration, schema-constrained extraction, and workflow automation.
 
 ---
 
-## Repository Structure
+## Core Capabilities
+
+The system automates an entire recruiting workflow:
+
+### Resume ingestion
+- Reads PDFs from a directory.
+- Converts to text via `pypdf`.
+
+### Structured data extraction
+- Uses an Ollama-hosted LLaMA model.
+- Constrained to a strict Pydantic schema.
+- Extracts name, location, education, work history, projects.
+
+### Profile normalization
+Computes derived attributes such as:
+- US location
+- Degree level
+- Experience thresholds
+- Project presence
+
+### Deterministic candidate filtering
+- Applies rule-based eligibility criteria.
+- Ensures reproducible, explainable decisions.
+
+### Interview slot generation
+- Generates weekday business-hour slots.
+- Avoids calendar conflicts.
+- Structured JSON output.
+
+### Email drafting and delivery
+- Generates invite emails with LLM.
+- Sends via local SMTP server.
+- Simulates inbox using GUI.
+
+### Reply interpretation
+- Parses candidate responses.
+- Validates chosen slot.
+- Updates persistent calendar.
+
+### Calendar management
+- Stores scheduled interviews in JSON.
+- Displays via lightweight GUI.
+
+---
+
+## Architecture Overview
+
+### Design Goals
+- Fully local execution
+- Deterministic workflow control
+- Schema-validated LLM output
+- Transparent decision logic
+- Modular prompt-driven architecture
+
+### High-Level Pipeline
 
 ```
-AI_Agent/
-├── AI_Agent.py          # Main orchestration logic
-├── Email.py             # Email sending and SMTP handling
-├── Calendar.py          # Calendar ingestion and scheduling logic
-├── calendar.json        # Calendar data source
-├── resumes/             # Input resumes (PDF format)
-    ├── *.pdf
+PDF Resumes
+     ↓
+Text Extraction
+     ↓
+LLM Resume Parser → Structured Candidate Profiles
+     ↓
+Normalization + Derived Features
+     ↓
+Deterministic Filtering
+     ↓
+Interview Slot Generator
+     ↓
+Invite Email Drafting
+     ↓
+SMTP Delivery → Inbox GUI
+     ↓
+Reply Parsing
+     ↓
+Calendar Scheduling
 ```
 
 ---
 
-## Requirements
+## Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| LLM runtime | Ollama + LLaMA 3 |
+| Language | Python 3.10+ |
+| Data modeling | Pydantic |
+| PDF parsing | pypdf |
+| Email simulation | aiosmtpd |
+| GUIs | Tkinter |
+| Persistence | JSON files |
+
+---
+
+## Project Structure
+
+```
+AI_Agent.py
+prompts/
+    parser.txt
+    dates.txt
+    congratulations.txt
+    response.txt
+resumes/
+email_dir/
+calendar_dir/
+requirements.txt
+```
+
+### Key Files
+
+**AI_Agent.py**  
+Main orchestration script controlling the full workflow.
+
+**prompts/**  
+Modular LLM prompts for parsing, scheduling, and response handling.
+
+**resumes/**  
+Input PDF resumes.
+
+**email_dir/**  
+Simulated inbox storage.
+
+**calendar_dir/**  
+JSON-backed interview calendar.
+
+---
+
+## Installation
 
 ### System Requirements
-
-* Python 3.10+
-* Ollama installed locally
+- Python 3.10+
+- Ollama installed
+- LLaMA model pulled locally
 
 ### Python Dependencies
 
-Key dependencies include:
-
-* `ollama`
-* `pydantic`
-* `pypdf`
-* `aiosmtpd`
-* `tkinter` (standard library)
-
-Install dependencies:
-
-```bash
+```
 pip install -r requirements.txt
 ```
 
 ---
 
-## LLM Setup (Required)
+## Running the Agent
 
-AI_Agent uses **Ollama** with the `llama3` model.
+From the project root:
 
-### Start Ollama
-
-```bash
-ollama serve
 ```
-
-Or allow AI_Agent to start it automatically (threaded) via:
-
-```python
-AIAgent().start_server()
-```
-
-Ensure the `llama3` model is available:
-
-```bash
-ollama pull llama3
-```
-
----
-
-## Running AI_Agent
-
-From inside the `AI_Agent/` directory:
-
-```bash
 python AI_Agent.py
 ```
 
-The agent will:
-
-1. Read all PDFs in `./resumes/`
-2. Extract structured candidate data using the LLM
-3. Filter candidates based on education, experience, location, and projects
-4. Generate interview dates/times excluding unavailable calendar dates
-5. Email qualified candidates and schedule interviews
-
----
-
-## Resume Parsing
-
-Resumes are parsed using an LLM prompt and validated against the `DataExtraction` schema, which includes:
-
-* Name, email, address
-* Education and work history
-* Projects
-* Boolean flags (e.g., `has_masters`, `has_five_years_work_experience`, `is_located_in_the_US`)
-
-This ensures consistent downstream filtering.
+### Execution Flow
+1. Starts Ollama server if not running.
+2. Loads prompts from `prompts/`.
+3. Parses resumes.
+4. Filters candidates.
+5. Generates interview slots.
+6. Sends invite emails via local SMTP.
+7. Opens inbox GUI.
+8. Parses replies and schedules interviews.
+9. Saves results to calendar JSON.
 
 ---
 
-## Candidate Filtering Logic
+## Deterministic Filtering Logic
 
-A candidate passes if **any** of the following are true:
+Candidates pass if **any** rule is satisfied:
 
-* Has a Master’s or Doctorate and is located in the U.S.
-* Has a Master’s or Doctorate and ≥5 years of work experience
-* Has ≥5 years of work experience and multiple projects
+- Masters or PhD + US location  
+- Bachelor + ≥5 years experience  
+- Masters/PhD + (≥3 years experience OR projects)
 
-Filtering is deterministic and rule-based after extraction.
-
----
-
-## Calendar and Scheduling
-
-* Calendar availability is loaded from `calendar.json`
-* Existing dates are treated as unavailable
-* The LLM generates new weekday-only interview dates and times
-* Responses are validated against strict schemas before use
+This demonstrates hybrid AI + rule-based decision systems.
 
 ---
 
-## Email Automation
+## LLM Integration Strategy
 
-AI_Agent:
+| Task | LLM Role |
+|------|----------|
+| Resume parsing | Extract structured candidate data |
+| Slot generation | Produce business-hour availability |
+| Email drafting | Natural-language communication |
+| Reply parsing | Interpret candidate choices |
 
-* Generates congratulatory interview emails via the LLM
-* Sends messages using SMTP
-* Parses candidate replies to confirm date/time selection
-* Updates the calendar upon confirmation
-
-Email logic is implemented in `Email.py`.
+All outputs are constrained by schema validation to prevent hallucination.
 
 ---
 
-## Design Principles
+## Engineering Highlights
+- Schema-constrained LLM extraction
+- Deterministic workflow orchestration
+- Persistent state via JSON
+- Local SMTP + GUI simulation
+- Modular prompt architecture
+- Fully offline operation
+---
 
-* **Local-first inference** (no cloud LLM dependency)
-* **Schema-enforced LLM outputs**
-* **Deterministic control logic** around probabilistic models
-* **Separation of concerns** (resume parsing, filtering, scheduling, email)
+## Educational Value
 
+This project demonstrates:
+- Practical LLM system integration
+- AI-assisted workflow automation
+- Structured data extraction from unstructured documents
+- Hybrid deterministic + AI system design
+- Prompt engineering with validation
+---
